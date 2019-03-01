@@ -56,8 +56,11 @@ itime=time.time()
 #Plot
 dmap=plt.contourf(lons, lats, data, 60,
                      transform=ccrs.PlateCarree(),
-                     cmap=cm.gist_ncar,
+                     cmap=cm.tab20c,
                      )
+#dmap=plt.imshow(data,
+        #cmap=cm.tab20c,
+        #)
 #dmap.set_clim(-20.0,50.0)
 ax.coastlines()
 #ax.set_yticks(range(5,40,5),crs=ccrs.PlateCarree())
