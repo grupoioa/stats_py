@@ -14,7 +14,7 @@ import numpy as np
 import time
 import datetime as dt
 import subprocess
-from plot_st import plot_stat
+import create_nc as nc
 
 #genera keys para dict de días
 def gen_d():
@@ -80,7 +80,11 @@ def create_out(data_vars, ops, tempo):
 
 def cal_max(data, d_var, data_out,mydate):
     '''
-    Calcula máximos para cada intervalo
+    Calcula máximos para cada intervalo, para todas las temporalidades
+    data: arreglo de datos a procesar
+    d_var:variable
+    data_out: diccionario de salida
+    mydate: fecha de los datos
     '''
 #hora
     if 'max_per_h' in data_out[d_var]:
@@ -108,20 +112,6 @@ def cal_max(data, d_var, data_out,mydate):
         data_out[d_var]['max_per_y'][mydate.strftime('%Y')]=\
                 np.amax([data_out[d_var]['max_per_y'][mydate.strftime('%Y')],data_max],
                         axis=0)
-
-def create_nc(filename,data_size=(348,617)):
-    '''
-    crea archivo .nc
-    agrega lat y lon
-    '''
-    with Dataset(filename, 'w', format="NETCDF4") as rootgrp:
-        #dimensiones
-        time=rootgrp.createDimension("Time",None)
-        lat=rootgrp.createDimension("south_north", data_size[0])
-        lon=rootgrp.createDimension("west_east",data_size[1])
-        #Atributos
-        rootgrp.description="Cálculo de estadísticos"
-    return 0
 
 itime=time.time()
 #variables a procesar
@@ -240,32 +230,7 @@ print(file_count,"archivos procesados")
 print(err_count,"archivos con errores")
 #guardando datos en archivo nc
 itime=time.time()
-unitsd={
-        "T2":"C",
-        "RH":"%",
-        }
-for nvar in data_out.keys():
-    #crea archivo para cada variable
-    nc_file=nvar+".nc"
-    print(nc_file)
-    create_nc(nc_file)
-    for op_data in data_out[nvar].keys():
-        len_time=len(data_out[nvar][op_data].keys())
-        for i,k in enumerate(sorted(data_out[nvar][op_data].keys())):
-            #crea variable para cada op
-            op_name=nvar+op_data#define nombre
-            with Dataset(nc_file,'a',format="NETCDF4") as rootgrp:
-                try:
-                    timeop=rootgrp.createDimension("Time_"+op_name,len_time)
-                    var=rootgrp.createVariable(
-                        op_name,#nombre
-                        "f8",#tipo de dato
-                        ("Time_"+op_name,"south_north","west_east"),#dimensiones
-                        )
-                except:
-                    pass
-                else:
-                    var.units=unitsd[nvar]
-                var[i,:,:]=data_out[nvar][op_data][k]
 
+#create files
+nc.create_all(tempo,data_out,)
 print("guardado:",time.time()-itime)
