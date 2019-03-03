@@ -8,7 +8,7 @@ Toma como parámetros fecha de inicio, fecha de fin y ruta
 '''
 
 import sys
-import multiprocessing as mp
+import multiprocessing as mpk
 from netCDF4 import Dataset
 import numpy as np
 import time
@@ -109,24 +109,18 @@ def cal_max(data, d_var, data_out,mydate):
                 np.amax([data_out[d_var]['max_per_y'][mydate.strftime('%Y')],data_max],
                         axis=0)
 
-def cfile(filename,data):
-    print(data.shape)
-    with Dataset(filename, "w", format="NETCDF4") as rootgrp:
-        #tamaños
+def create_nc(filename,data_size=(348,617)):
+    '''
+    crea archivo .nc
+    agrega lat y lon
+    '''
+    with Dataset(filename, 'w', format="NETCDF4") as rootgrp:
+        #dimensiones
         time=rootgrp.createDimension("Time",None)
-        lat=rootgrp.createDimension("south_north", data.shape[0])
-        lon=rootgrp.createDimension("west_east",data.shape[1])
-        #variables
-        temp=rootgrp.createVariable(
-                "T2",#nombre
-                "f8",#tipo de dato
-                ("Time","south_north","west_east"),#dimensiones
-                )
+        lat=rootgrp.createDimension("south_north", data_size[0])
+        lon=rootgrp.createDimension("west_east",data_size[1])
         #Atributos
-        rootgrp.description="TEst example"
-        temp.units='C'
-        #save data
-        temp[0,:,:]=data
+        rootgrp.description="Cálculo de estadísticos"
     return 0
 
 itime=time.time()
@@ -231,11 +225,6 @@ while pdate<=edate:
     proc_time.append([rtime,time.time()-itime])
     pdate+=dt.timedelta(days=1)
     print(proc_time[-1])
-    #print('data_max:', len(data_max), data_max["T2"].shape)
-    #print('data_prom:', len(data_prom), data_prom["T2"].shape)
-    #print('data_perc:', len(data_perc), data_perc["T2"].shape)
-    #print('data_histo:',len(data_histo), data_histo["T2"])
-    #print('data_n:', data_n)
 #print('data:',data_out)
 
 result = subprocess.check_output(['bash','-c', 'free -m']).decode('utf-8')
@@ -249,25 +238,34 @@ for d in proc_time:
 
 print(file_count,"archivos procesados")
 print(err_count,"archivos con errores")
-itime=time.time()
-#grafica por mes
-for i in gen_m():
-    plot_stat(data_out["T2"]["max_per_m"][i],
-        "Temperatura máxima mes "+i+"\n1980-2016",
-        "tmax_"+i+".png",
-        )
-#grafica por hora, enero
-for i in range(24):
-    j= "01{:02}".format(i)
-    plot_stat(data_out["T2"]["max_per_h"][j],
-        "Temperatura máxima enero, hora:  "+str(i)+"\n1980-2016",
-        "tmax_"+j+".png",
-        )
-print("graficación:",time.time()-itime)
 #guardando datos en archivo nc
+itime=time.time()
+unitsd={
+        "T2":"C",
+        "RH":"%",
+        }
 for nvar in data_out.keys():
+    #crea archivo para cada variable
+    nc_file=nvar+".nc"
+    print(nc_file)
+    create_nc(nc_file)
     for op_data in data_out[nvar].keys():
-        for i in data_out[nvar][op_data].keys():
-            nc_file='nc/'+nvar+op_data+i+'.nc'
-            print(nc_file)
-            cfile(nc_file,data_out[nvar][op_data][i])
+        len_time=len(data_out[nvar][op_data].keys())
+        for i,k in enumerate(sorted(data_out[nvar][op_data].keys())):
+            #crea variable para cada op
+            op_name=nvar+op_data#define nombre
+            with Dataset(nc_file,'a',format="NETCDF4") as rootgrp:
+                try:
+                    timeop=rootgrp.createDimension("Time_"+op_name,len_time)
+                    var=rootgrp.createVariable(
+                        op_name,#nombre
+                        "f8",#tipo de dato
+                        ("Time_"+op_name,"south_north","west_east"),#dimensiones
+                        )
+                except:
+                    pass
+                else:
+                    var.units=unitsd[nvar]
+                var[i,:,:]=data_out[nvar][op_data][k]
+
+print("guardado:",time.time()-itime)

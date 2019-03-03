@@ -10,6 +10,7 @@ from cartopy import feature
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import matplotlib.ticker as mticker
 #from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
+import matplotlib as mpl
 
 import time
 
@@ -46,12 +47,17 @@ def plot_stat(data,title, ofilename):
     print('load features:',time.time()-itime)
     itime=time.time()
 #Plot
+    normi = mpl.colors.Normalize(vmin=0, vmax=1000)
     dmap=plt.contourf(lons, lats, data, 30,
                          transform=ccrs.PlateCarree(),
                          #cmap=cm.gist_ncar,
                          cmap=cm.tab20c,
-                         vmin=-20,
-                         vmax=50,
+                         #T2
+                         #vmin=-20,
+                         #vmax=50,
+                         #RAIN
+                         norm=normi,
+                         #extend='both',
                          )
     
 #dmap.set_clim(-20.0,50.0)
@@ -72,17 +78,23 @@ def plot_stat(data,title, ofilename):
             shrink=0.95,
             orientation="horizontal",
             aspect=50,
-            spacing="uniform",
+            #spacing="uniform",
+            #spacing='proportional',
             #pad=0.03,
             #fraction=0.1,
             pad=0.01,
-            ticks=range(-20,50,5),#[-20,-10,-5,0,10,20,30,40,50],
+            ticks=range(0,600,50)#RAIN
+            #ticks=range(-20,50,5)#T2
             #ticks=range(-20,20,1),
 
             )
-    cbar.set_label("Temperatura [C]")
-    #cbar.set_clim(-19.0,20.0)
-    dmap.set_clim(-20.0,50.0)
+    #RAIN
+    cbar.set_label("Precipitación [mm/?]")
+    dmap.set_clim(0,300)
+    #T2
+    #cbar.set_label("Temperatura [C]")
+    ##cbar.set_clim(-19.0,20.0)
+    #dmap.set_clim(-20.0,50.0)
 
     plt.title(title,
             pad=25,

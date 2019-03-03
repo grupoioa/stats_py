@@ -6,10 +6,13 @@ from plot_st import plot_stat
 
 if __name__ == "__main__":
     filenames=sys.argv[1:]
-    for filename in filenames:
+    print(filenames)
+    for i,filename in enumerate(filenames):
+        print(filename)
+        k='PREC2_MAX' #para raul v4
+        #k='T2'# para el mío
         with Dataset(filename, "r", format="NETCDF4") as rootgrp: 
-            print(rootgrp['T2'])
-            data=np.array(rootgrp['T2'])
+            data=np.array(rootgrp[k])
         print(data.shape)
 
         plot_stat(data[0],
