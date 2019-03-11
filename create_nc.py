@@ -6,35 +6,63 @@ metadata['T2']={
         'standard_name':'Air temperature',
         'long_name':'Air temperature',
         'description': ' Air Temperature at 2 m',
-        'dtype':"f8",
+        'dtype':"f4",
         }
 metadata['U10']={
         'units':'m s-1',
         'standard_name':'eastward_wind',
         'long_name':'eastward_wind',
         'description': 'U at 10 m',
-        'dtype':"f8",
+        'dtype':"f4",
         }
 metadata['V10']={
         'units':'m s-1',
         'standard_name':'northward_wind',
         'long_name':'northward_wind',
         'description': 'V at 10 m',
-        'dtype':"f8",
+        'dtype':"f4",
         }
 metadata['PREC2']={
         'units':'mm',
         'standard_name':'Precipitation',
         'long_name':'Precipitation',
         'description': 'Precipitation',
-        'dtype':"f8",
+        'dtype':"f4",
         }
 metadata['RH']={
         'units':'%',
         'standard_name':'Relative Humidity',
         'long_name':'Relative Humidity',
         'description': 'Relative Humidity',
-        'dtype':"f8",
+        'dtype':"u1",
+        }
+metadata['W']={
+        'units':'m-s-1',
+        'standard_name':'wind',
+        'long_name':'wind',
+        'description': 'wind',
+        'dtype':"f4",
+        }
+metadata['SWDOWN']={
+        'units':'u',
+        'standard_name':'Rad',
+        'long_name':'Rad',
+        'description': 'Rad',
+        'dtype':"f4",
+        }
+metadata['GLW']={
+        'units':'u',
+        'standard_name':'rad',
+        'long_name':'rad',
+        'description': 'rad',
+        'dtype':"f4",
+        }
+metadata['QFX']={
+        'units':'u',
+        'standard_name':'eva',
+        'long_name':'eva',
+        'description': 'eva',
+        'dtype':"f4",
         }
 #metadata['']={
         #'units':'',

@@ -15,6 +15,7 @@ import time
 import datetime as dt
 import subprocess
 import create_nc as nc
+import st_ops 
 
 #genera keys para dict de días
 def gen_d():
@@ -49,21 +50,19 @@ def gen_y(year,end_year):
 
 #crea arreglos de salidas
 #ocupa menos RAM si no es función
-def create_out(data_vars, ops, tempo):
+def create_out(data_vars, ops, tempo, años):
+    '''
+    data_vars: variables
+    ops: operaciones
+    tempo: temporalidades
+    dt: (año inicio,año fin)
+    '''
     data_out={}
     for v in data_vars:
         data_out[v]={}
         for op in ops:
             for t in tempo:
                 data_out[v][op+t]={}
-                if op=='max':
-                    init_a=np.full(data_size,np.NINF,dtype=np.float)
-                elif op=='min':
-                    init_a=np.full(data_size,np.PINF,dtype=np.float)
-                elif op=='acc':
-                    init_a=np.zeros(data_size,dtype=np.float)
-                else:
-                    init_a=[]
                 if t=='_per_h':
                     my_keys=gen_h()
                 elif t=='_per_d':
@@ -72,10 +71,26 @@ def create_out(data_vars, ops, tempo):
                 elif t=='_per_m':
                     my_keys=gen_m()
                 elif t=='_per_y':
-                    my_keys=gen_y(1979,2017)
+                    my_keys=gen_y(años[0],años[1])
 
                 for m in my_keys:
-                    data_out[v][op+t][m] = np.copy(init_a)
+                    if op=='max':
+                        data_out[v][op+t][m]=np.full(data_size,np.NINF,dtype=np.float)
+                    elif op=='min':
+                        data_out[v][op+t][m]=np.full(data_size,np.PINF,dtype=np.float)
+                    elif op=='avg':
+                        data_out[v][op+t][m]=np.zeros(data_size,dtype=np.float)
+                    elif op=='cnt':
+                        data_out[v][op+t][m]=np.zeros(1, dtype=np.uint16)
+                    elif op=='prc':
+                        if v=='T2':
+                            data_out[v][op+t][m]=np.zeros(70, dtype=np.uint32)
+                        elif v=='RAIN':
+                            data_out[v][op+t][m]=np.zeros(80, dtype=np.uint32)
+                        elif v=='WIND':
+                            data_out[v][op+t][m]=np.zeros(80, dtype=np.uint32)
+                            
+                    #data_out[v][op+t][m] = np.copy(init_a)
     return data_out
 
 def cal_max(data, d_var, data_out,mydate):
@@ -118,13 +133,12 @@ itime=time.time()
  
 data_vars=(
         "T2",#Temperatura
-        #"RH",#Humedad Relativa
+        "RH",#Humedad Relativa
         #"RAIN",#lluvia
-        #"U10",#viento componente U
-        #"V10",#viento componente V
-        #"SWDOWN",#Radiación de onda corta
-        #"GLW",# Radiación de onda larga
-        #"QFX",#Evaporación
+        "W",#viento
+        "SWDOWN",#Radiación de onda corta
+        "GLW",# Radiación de onda larga
+        "QFX",#Evaporación
         #"PBLH",#Altura de capa límite
         )
 #vars=(
@@ -145,9 +159,10 @@ data_size=(348,617)
 #operaciones
 ops=(
         'max',
-        #'min',
-        #'acc',
-        #'per',
+        'min',
+        'avg',
+        'cnt',
+        #'prc',
         #'his',
         )
 #temporalidad de salidas
@@ -157,46 +172,61 @@ tempo=(
         '_per_m',
         #'_per_y',
         )
-#diccionarios de salidas
-data_out=create_out(data_vars,ops,tempo)
-result = subprocess.check_output(['bash','-c', 'free -m']).decode('utf-8')
-print(result)
-print('init:',time.time()-itime)
-#carpeta de datos
-path=sys.argv[3]
-data_n={}
-proc_time=[]
-#inicializa acumulador
-for var in data_vars:
-    data_n[var]=0
 #formato de nombres de archivos
 fmtdate= "a%Y/salidas/wrfout_c1h_d01_%Y-%m-%d_%H:%M:%S.a%Y"
-#idate=dt.datetime(1982,1,1)
-#edate=dt.datetime(1982,12,31)
 #convierte intervalo de fechas
 infmt="%Y%m%d"
 idate=dt.datetime.strptime(sys.argv[1],infmt)
 edate=dt.datetime.strptime(sys.argv[2],infmt)
 print(idate,edate)
+#diccionarios de salidas
+años=(idate.strftime("%Y"),edate.strftime("%Y"))
+data_out=create_out(data_vars,ops,tempo,años)
+result = subprocess.check_output(['bash','-c', 'free -m']).decode('utf-8')
+print(result)
+print('init:',time.time()-itime)
+#carpeta de datos
+path=sys.argv[3]
+proc_time=[]
 #ciclo de procesamiento por archivo
 pdate=idate
 file_count=0
 err_count=0
 while pdate<=edate:
     dayfile=path+pdate.strftime(fmtdate)
-    print(dayfile)
     itime=time.time()
+    cals_time=0
     data={}
-    #file opening
+    #file test
     try:
-        with Dataset(dayfile,'r') as root:
-            #var loading
-            for var in data_vars:
-                data[var]=np.array(root[var][:])
+        with open(dayfile,'r') as pfile:
+            print(dayfile)
     except:
-        print('Error en la lectura')
+        print('Archivo no encontrado: ',dayfile)
         err_count+=1
+        pdate+=dt.timedelta(days=1)
         continue
+    #file opening
+    with Dataset(dayfile,'r') as root:
+        #var loading
+        for var in data_vars:
+            if var=='RH':
+                P=np.array(root['PSFC'][:])
+                Q=np.array(root['Q2'][:])
+                T=np.array(root['T2'][:])
+                itimec=time.time()
+                data['RH']=(0.263*P*Q)/np.exp(17.67*(T-273.15)/(T-29.65))
+                np.clip(data['RH'],0,100,out=data['RH'])
+                cals_time+=time.time()-itimec
+            elif var=='W':
+                U=np.array(root['U10'][:])
+                V=np.array(root['V10'][:])
+                itimec=time.time()
+                data['W']=np.sqrt(np.square(V)+np.square(U))
+                cals_time+=time.time()-itimec
+            else:
+                data[var]=np.array(root[var][:])
+    #except:
     file_count+=1
 
     rtime=time.time()-itime
@@ -205,16 +235,14 @@ while pdate<=edate:
     for var in data_vars:
         if var=='T2':
             data[var]-=273.15
-        cal_max(data[var],var,data_out,pdate)
-        #data_max[var]=np.max(data[var],axis=0)
-        #data_acc[var]=np.sum(data[var],axis=0)
-        #data_n[var]+=data[var].shape[0]
-        #data_perc[var]=np.percentile(data[var],[0.1,1,5,10,90,95,99,99.9])
+        st_ops.st_max(data[var],var,data_out,pdate)
+        st_ops.st_min(data[var],var,data_out,pdate)
+        st_ops.st_acc(data[var],var,data_out,pdate)
         #data_histo[var]=np.histogram(data[var],bins=10)
-    #T2max=np.sum(T2,axis=0)
     proc_time.append([rtime,time.time()-itime])
     pdate+=dt.timedelta(days=1)
-    print(proc_time[-1])
+    print(proc_time[-1], 'cals:',cals_time)
+st_ops.st_avg(data_out)
 #print('data:',data_out)
 
 result = subprocess.check_output(['bash','-c', 'free -m']).decode('utf-8')
