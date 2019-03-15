@@ -1,10 +1,10 @@
 # IOA python stats (V0.1.0)
 
-Generación de estadísticos: mínimas, máximas, promedios y percentiles de las salidas del WRF generadas en el grupo IOA . 
+Generación de estadísticos: mínimas, máximas, promedios y percentiles de las salidas del WRF generadas en el grupo IOA. 
 
 
 ## Primeros pasos
-Estas rutinas están diseñadas para correr en el cluster y con los datos en la carpeta /CHACMOOL/DATOS/ y se debe verificar que se encuentran instaladas las bibliotecas necesarias.
+Estas rutinas están diseñadas para correr en el cluster y con los datos en la carpeta /CHACMOOL/DATOS/ y se debe verificar que se encuentran instaladas las bibliotecas necesarias, las cuales se especifican en Prerrequisitos.
 En caso de no encontrar las bibliotecas es recomendable instalarlas mediante un ambiente en conda.
 Para instalar un ambiente en conda se debe ejecutar:
 
@@ -32,7 +32,7 @@ o para instalar en un ambiente (p. ej. myenv):
 
 *conda install -n myenv -c anaconda netcdf4*
 
-## Probando
+## Deployment
 
 El archivo p_wrf_out.sh ejecuta el script p_wrf_out.py en el cluster. 
 Dentro de p_wrf_out.sh se configura la ejecución y se establece la fecha de inicio, fecha de fin y la carpeta donde se encuentran los datos. Por ejemplo, la instrucción:
@@ -40,11 +40,6 @@ Dentro de p_wrf_out.sh se configura la ejecución y se establece la fecha de ini
 *srun python p_wrf_out.py 19800101 19801231 '/CHACMOOL/DATOS/'*
 
 Ejecuta el script para el intervalo del 1 de enero de 1980 al 31 de diciembre de 1980, con los datos en */CHACMOOL/DATOS/*
-
-## Deployment
-
-???
-Agregue notas adicionales sobre cómo implementar esto en un sistema en vivo
 
 ## Para contribuir
 
@@ -56,15 +51,14 @@ Debe ser para obtener detalles sobre nuestro código de conducta y el proceso pa
 
 * **Miguel Ángel Robles R.** *Initial work*
 
-Vea también la lista de [colaboradores]
+Vea también la lista de [colaboradores](https://github.com/grupoioa/stats_py/graphs/contributors)
 
 ## Licencia
 
 Este proyecto está licenciado bajo la licencia MIT; consulte el archivo [LICENSE.md] (LICENSE.md) para obtener detalles
 
-## Colaboradores/Agradecimientos??
+## Agradecimientos
 
 * *Raul Medina*
 * *Sam*
 * *Olmo*
-* ???
