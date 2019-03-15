@@ -1,72 +1,70 @@
-# Procesamiento de archivos netCDF (salidas WRF)
+# IOA python stats (V0.1.0)
 
-Aquí va un párrafo de la descripción del proyecto
+Generación de estadísticos: mínimas, máximas, promedios y percentiles de las salidas del WRF generadas en el grupo IOA . 
+
 
 ## Primeros pasos
+Estas rutinas están diseñadas para correr en el cluster y con los datos en la carpeta /CHACMOOL/DATOS/ y se debe verificar que se encuentran instaladas las bibliotecas necesarias.
+En caso de no encontrar las bibliotecas es recomendable instalarlas mediante un ambiente en conda.
+Para instalar un ambiente en conda se debe ejecutar:
 
-Estas instrucciones le permitirán obtener una copia del proyecto en funcionamiento en su máquina local para fines de desarrollo y prueba. 
+*conda create --name myenv*
 
 ### Prerrequisitos
+Se requieren las siguientes bibliotecas
+* numpy
+* netCDF4
 
-Qué cosas necesita para instalar el software y cómo instalarlo
+#### Instalación
+Se pueden instalar mediante pip o mediante conda (recomendado)
 
-```
-Da un ejemplo
-```
+##### Para numpy:
+*conda install -c anaconda numpy*
 
-### Instalación
+o para instalar en un ambiente (p. ej. myenv):
 
-Una serie paso a paso de ejemplos que le indican cómo ejecutar el entorno de desarrollo
+*conda install -n myenv -c anaconda numpy*
 
-Di cual será el paso
+##### Para netCDF4:
+*conda install -c anaconda netcdf4*
 
-```
-Da un ejemplo
-```
+o para instalar en un ambiente (p. ej. myenv):
 
-Y repite
-
-```
-Hasta que termines
-```
-
-Termine con un ejemplo de cómo sacar algunos datos del sistema o usarlos para una pequeña demostración
+*conda install -n myenv -c anaconda netcdf4*
 
 ## Probando
 
-Explica cómo ejecutar las pruebas automatizadas para este sistema
+El archivo p_wrf_out.sh ejecuta el script p_wrf_out.py en el cluster. 
+Dentro de p_wrf_out.sh se configura la ejecución y se establece la fecha de inicio, fecha de fin y la carpeta donde se encuentran los datos. Por ejemplo, la instrucción:
+
+*srun python p_wrf_out.py 19800101 19801231 '/CHACMOOL/DATOS/'*
+
+Ejecuta el script para el intervalo del 1 de enero de 1980 al 31 de diciembre de 1980, con los datos en */CHACMOOL/DATOS/*
 
 ## Deployment
 
+???
 Agregue notas adicionales sobre cómo implementar esto en un sistema en vivo
-
-## Construido con
-
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
 
 ## Para contribuir
 
 Link a los estándares para contribuir, como referencia se puede usar este link [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426)
 Debe ser para obtener detalles sobre nuestro código de conducta y el proceso para enviar pull request.
 
-## Versionando
-
-Usamos [SemVer](https://semver.org/lang/es/) para versionar. Para las versiones disponibles, consulte [las etiquetas en este repositorio](https://github.com/your/project/tags). 
 
 ## Autores
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
+* **Miguel Ángel Robles R.** *Initial work*
 
-Vea también la lista de [colaboradores](https://github.com/your/project/contributors) que participaron en este proyecto.
+Vea también la lista de [colaboradores]
 
 ## Licencia
 
 Este proyecto está licenciado bajo la licencia MIT; consulte el archivo [LICENSE.md] (LICENSE.md) para obtener detalles
 
-## Agradecimientos
+## Colaboradores/Agradecimientos??
 
-* A cualquiera cuyo código haya sido utilizado
-* Inspiración
-* etc
+* *Raul Medina*
+* *Sam*
+* *Olmo*
+* ???
