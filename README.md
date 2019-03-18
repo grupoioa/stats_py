@@ -4,7 +4,8 @@ Generación de estadísticos: mínimas, máximas, promedios y percentiles de las
 
 
 ## Primeros pasos
-Estas rutinas están diseñadas para correr en el cluster y con los datos en la carpeta /CHACMOOL/DATOS/ y se debe verificar que se encuentran instaladas las bibliotecas necesarias, las cuales se especifican en Prerrequisitos.
+Estas rutinas están diseñadas para correr en el cluster, con acceso a los datos desde él (actualmente en /CHACMOOL/DATOS/).
+Se debe verificar que se encuentran instaladas las bibliotecas necesarias, las cuales se especifican en [Prerrequisitos](#Prerrequisitos).
 En caso de no encontrar las bibliotecas es recomendable instalarlas mediante un ambiente en conda.
 Para instalar un ambiente en conda se debe ejecutar:
 
@@ -16,7 +17,7 @@ Se requieren las siguientes bibliotecas
 * netCDF4
 
 #### Instalación
-Se pueden instalar mediante pip o mediante conda (recomendado)
+Se pueden instalar mediante pip o mediante [conda](https://conda.io) (recomendado)
 
 ##### Para numpy:
 *conda install -c anaconda numpy*
@@ -43,22 +44,13 @@ Ejecuta el script para el intervalo del 1 de enero de 1980 al 31 de diciembre de
 
 ## Para contribuir
 
-Link a los estándares para contribuir, como referencia se puede usar este link [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426)
-Debe ser para obtener detalles sobre nuestro código de conducta y el proceso para enviar pull request.
-
+Para información sobre cómo ayudar o publicar errores vea [CONTRIBUTING.md](https://github.com/grupoioa/stats_py/blob/master/.github/CONTRIBUTING.md).
 
 ## Autores
 
-* **Miguel Ángel Robles R.** *Initial work*
+* **Miguel Ángel Robles R.** 
 
 Vea también la lista de [colaboradores](https://github.com/grupoioa/stats_py/graphs/contributors)
 
-## Licencia
-
-Este proyecto está licenciado bajo la licencia MIT; consulte el archivo [LICENSE.md] (LICENSE.md) para obtener detalles
-
 ## Agradecimientos
-
-* *Raul Medina*
-* *Sam*
-* *Olmo*
+La primera versión de este código fue hecha en NCL y publicada en [https://github.com/rmedina09/HitoAtlasGolfoMexico](https://github.com/rmedina09/HitoAtlasGolfoMexico), agradecemos a Raul Medina por facilitar detalles sobre el código. Asímismo agradecemos a Olmo Zavala por su contribución en el desarrollo del proyecto.
