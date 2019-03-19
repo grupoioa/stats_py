@@ -36,7 +36,7 @@ metadata['RH']={
         'description': 'Relative Humidity',
         'dtype':"u1",
         }
-metadata['W']={
+metadata['WS']={
         'units':'m-s-1',
         'standard_name':'wind',
         'long_name':'wind',

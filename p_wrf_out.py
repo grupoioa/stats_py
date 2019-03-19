@@ -2,13 +2,13 @@
 
 '''
 Procesamiento de datos NETCDF de salidas de pronóstico por día.
-Toma como parámetros fecha de inicio, fecha de fin y ruta
+Toma como parámetros fecha de inicio, fecha de fin y ruta de datos de entrada
     python by_day.py 19810101 19811231 /CHACMOOL/DATOS/
 
 '''
 
 import sys
-import multiprocessing as mpk
+import multiprocessing as mp
 from netCDF4 import Dataset
 import numpy as np
 import time
@@ -48,10 +48,9 @@ def gen_y(year,end_year):
         y.append(str(i))
     return tuple(y)
 
-#crea arreglos de salidas
-#ocupa menos RAM si no es función
 def create_out(data_vars, ops, tempo, años):
     '''
+    Crea arreglo para almacenar datos de salida
     data_vars: variables
     ops: operaciones
     tempo: temporalidades
@@ -87,46 +86,56 @@ def create_out(data_vars, ops, tempo, años):
                             data_out[v][op+t][m]=np.zeros(70, dtype=np.uint32)
                         elif v=='RAIN':
                             data_out[v][op+t][m]=np.zeros(80, dtype=np.uint32)
-                        elif v=='WIND':
+                        elif v=='WS':
                             data_out[v][op+t][m]=np.zeros(80, dtype=np.uint32)
                             
                     #data_out[v][op+t][m] = np.copy(init_a)
     return data_out
 
-def cal_max(data, d_var, data_out,mydate):
+def load_data(dayfile, data_vars ):
     '''
-    Calcula máximos para cada intervalo, para todas las temporalidades
-    data: arreglo de datos a procesar
-    d_var:variable
-    data_out: diccionario de salida
-    mydate: fecha de los datos
+    lee datos del archivo de entrada y los carga en el diccionario de salida
+    data_vars: diccionario de salida
+    dayfile: archivo de entrada 
+    return: tupla de tiempos (lectura,procesamiento)
     '''
-#hora
-    if 'max_per_h' in data_out[d_var]:
-        for my_h in range(24):
-            my_k=mydate.strftime('%m')+"{:02}".format(my_h)
-            data_out[d_var]['max_per_h'][my_k]=\
-                np.amax([data_out[d_var]['max_per_h'][my_k],data[my_h]],
-                        axis=0)
+    tread=0
+    tproc=0
+    #file opening
+    with Dataset(dayfile,'r') as root:
+        for var in data_vars:
+            tread_i=time.time()
+            if var=='T2':
+                data['T2']=np.array(root['T2'][:])
+                tproc_i=time.time()
+                tread+=tread_i-tproc_i
+                data['T2']-=273.15
+                tproc+=tproc_i-time.time()
 
-    data_max=np.amax(data, axis=0)
-#reducir usando una función
-#día
-    if 'max_per_d' in data_out[d_var]:
-        data_out[d_var]['max_per_d'][mydate.strftime('%m%d')]=\
-                np.amax([data_out[d_var]['max_per_d'][mydate.strftime('%m%d')],data_max],
-                        axis=0,
-                        )
-#mes
-    if 'max_per_m' in data_out[d_var]:
-        data_out[d_var]['max_per_m'][mydate.strftime('%m')]=\
-                np.amax([data_out[d_var]['max_per_m'][mydate.strftime('%m')],data_max],
-                        axis=0)
-#año
-    if 'max_per_y' in data_out[d_var]:
-        data_out[d_var]['max_per_y'][mydate.strftime('%Y')]=\
-                np.amax([data_out[d_var]['max_per_y'][mydate.strftime('%Y')],data_max],
-                        axis=0)
+            if var=='RH':
+                P=np.array(root['PSFC'][:])
+                Q=np.clip(np.array(root["Q2"][:]),a_min=0,a_max=None,)
+                T=np.array(root['T2'][:])
+                tproc_i=time.time()
+                tread+=tread_i-tproc_i
+                ez=611.2
+                eps=0.622
+                Es=ez*np.exp(17.67*(T-273.15)/(T-29.65))
+                Qvs=eps*Es/(P-(1-eps)*Es)
+                data['RH']=100*Q/Qvs
+                np.clip(data['RH'],0,100,out=data['RH'])
+                tproc+=tproc_i-time.time()
+            elif var=='WS':
+                U=np.array(root['U10'][:])
+                V=np.array(root['V10'][:])
+                tproc_i=time.time()
+                tread+=tread_i-tproc_i
+                data['WS']=np.sqrt(np.square(V)+np.square(U))
+                tproc+=tproc_i-time.time()
+            else:
+                data[var]=np.array(root[var][:])
+                tread+=tread_i-time.time()
+    return (tread,tproc)
 
 itime=time.time()
 #variables a procesar
@@ -135,25 +144,12 @@ data_vars=(
         "T2",#Temperatura
         "RH",#Humedad Relativa
         #"RAIN",#lluvia
-        "W",#viento
+        "WS",#viento
         "SWDOWN",#Radiación de onda corta
         "GLW",# Radiación de onda larga
         "QFX",#Evaporación
         #"PBLH",#Altura de capa límite
         )
-#vars=(
-        #"T2",#Temperatura
-        #"RAINC",#lluvia ??
-        #"RAINNC",
-        #"U10",#viento componente U
-        #"V10",#viento componente V
-        #"SWDOWN",#Radiación de onda corta
-        #"GLW",# Radiación de onda larga
-        #"QFX",#Evaporación
-        ##"P",# perturbación de la presión
-        #"PSFC",#Presión en superficie
-        ##"PBLH",#Altura de capa límite
-        #)
 #tamaño de datos, leer de algún archivo?
 data_size=(348,617)
 #operaciones
@@ -178,24 +174,30 @@ fmtdate= "a%Y/salidas/wrfout_c1h_d01_%Y-%m-%d_%H:%M:%S.a%Y"
 infmt="%Y%m%d"
 idate=dt.datetime.strptime(sys.argv[1],infmt)
 edate=dt.datetime.strptime(sys.argv[2],infmt)
-print(idate,edate)
-#diccionarios de salidas
+print('Procesando intervalo:',idate,edate)
+#diccionarios de salida
 años=(idate.strftime("%Y"),edate.strftime("%Y"))
 data_out=create_out(data_vars,ops,tempo,años)
+#consumo de RAM
 result = subprocess.check_output(['bash','-c', 'free -m']).decode('utf-8')
 print(result)
-print('init:',time.time()-itime)
-#carpeta de datos
-path=sys.argv[3]
+
+#tiempo
+print('tiempo de inicialización:',time.time()-itime)
 proc_time=[]
+
+#carpeta de datos de entrada
+path=sys.argv[3]
 #ciclo de procesamiento por archivo
 pdate=idate
 file_count=0
 err_count=0
 while pdate<=edate:
-    dayfile=path+pdate.strftime(fmtdate)
+    #tiempos
     itime=time.time()
     cals_time=0
+
+    dayfile=path+pdate.strftime(fmtdate)
     data={}
     #file test
     try:
@@ -206,42 +208,22 @@ while pdate<=edate:
         err_count+=1
         pdate+=dt.timedelta(days=1)
         continue
-    #file opening
-    with Dataset(dayfile,'r') as root:
-        #var loading
-        for var in data_vars:
-            if var=='RH':
-                P=np.array(root['PSFC'][:])
-                Q=np.array(root['Q2'][:])
-                T=np.array(root['T2'][:])
-                itimec=time.time()
-                data['RH']=(0.263*P*Q)/np.exp(17.67*(T-273.15)/(T-29.65))
-                np.clip(data['RH'],0,100,out=data['RH'])
-                cals_time+=time.time()-itimec
-            elif var=='W':
-                U=np.array(root['U10'][:])
-                V=np.array(root['V10'][:])
-                itimec=time.time()
-                data['W']=np.sqrt(np.square(V)+np.square(U))
-                cals_time+=time.time()-itimec
-            else:
-                data[var]=np.array(root[var][:])
-    #except:
-    file_count+=1
+    init_time=time.time()-itime
+    #data loading
+    rtime,ptime=load_data(dayfile,data_vars)
 
-    rtime=time.time()-itime
     itime=time.time()
+    file_count+=1
     #Data processing
     for var in data_vars:
-        if var=='T2':
-            data[var]-=273.15
         st_ops.st_max(data[var],var,data_out,pdate)
         st_ops.st_min(data[var],var,data_out,pdate)
         st_ops.st_acc(data[var],var,data_out,pdate)
         #data_histo[var]=np.histogram(data[var],bins=10)
-    proc_time.append([rtime,time.time()-itime])
     pdate+=dt.timedelta(days=1)
-    print(proc_time[-1], 'cals:',cals_time)
+    #guarda tiempos (inicial,lectura,procesamiento)
+    proc_time.append([init_time, rtime, ptime+time.time()-itime])
+    print(proc_time[-1])
 st_ops.st_avg(data_out)
 #print('data:',data_out)
 
