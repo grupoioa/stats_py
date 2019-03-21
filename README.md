@@ -44,7 +44,7 @@ Ejecuta el script para el intervalo del 1 de enero de 1980 al 31 de diciembre de
 
 ## Para contribuir
 
-Para información sobre cómo ayudar o publicar errores vea [CONTRIBUTING.md](https://github.com/grupoioa/stats_py/CONTRIBUTING.md).
+Para información sobre cómo ayudar o publicar errores vea [CONTRIBUTING.md](https://github.com/grupoioa/stats_py/blob/master/CONTRIBUTING.md).
 
 ## Autores
 
