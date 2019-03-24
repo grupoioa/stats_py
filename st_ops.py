@@ -88,22 +88,22 @@ def st_acc(data, d_var, data_out, mydate):
     data_out: diccionario de salida
     mydate: fecha de los datos
     '''
-    tempos=[te for te in data_out[d_var].keys() if 'avg' in te]
+    tempos=[te for te in data_out[d_var].keys() if 'acc' in te]
     #acumulado del día
     data_acc=np.sum(data, axis=0)
     for tempo in tempos:
         #define keys
         #día
-        if 'avg_per_d' == tempo:
+        if 'acc_per_d' == tempo:
             my_k=mydate.strftime('%m%d')
         #mes
-        if 'avg_per_m'==tempo:
+        if 'acc_per_m'==tempo:
             my_k=mydate.strftime('%m')
         #año
-        if 'avg_per_y'==tempo:
+        if 'acc_per_y'==tempo:
             my_k=mydate.strftime('%Y')
         #hora
-        if 'avg_per_h'==tempo:
+        if 'acc_per_h'==tempo:
             #para cada hora
             for my_h in range(24):
                 my_k=mydate.strftime('%m')+"{:02}".format(my_h)
@@ -127,9 +127,8 @@ def st_avg(data_out):
         tempos=[te for te in data_out[d_var].keys() if 'avg' in te]
         for tempo in tempos:
             for k in data_out[d_var][tempo].keys():
-                data_out[d_var][tempo][k]/=data_out[d_var]['cnt'+tempo[3:]][k]
+                data_out[d_var][tempo][k]=data_out[d_var]['acc'+tempo[3:]][k]/data_out[d_var]['cnt'+tempo[3:]][k]
                 #print('ndata:',tempo,data_out[d_var]['cnt'+tempo[3:]][k])
-                #del(data_out[d_var]['cnt'+tempo[3:]][k] )
             del(data_out[d_var]['cnt'+tempo[3:]] )
 
 def st_his(data, d_var, data_out, mydate):

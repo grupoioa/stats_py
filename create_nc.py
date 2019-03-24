@@ -22,7 +22,7 @@ metadata['V10']={
         'description': 'V at 10 m',
         'dtype':"f4",
         }
-metadata['PREC2']={
+metadata['RAIN']={
         'units':'mm',
         'standard_name':'Precipitation',
         'long_name':'Precipitation',
@@ -37,7 +37,7 @@ metadata['RH']={
         'dtype':"u1",
         }
 metadata['WS']={
-        'units':'m-s-1',
+        'units':'m s-1',
         'standard_name':'wind',
         'long_name':'wind',
         'description': 'wind',

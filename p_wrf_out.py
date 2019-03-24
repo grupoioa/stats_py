@@ -77,6 +77,8 @@ def create_out(data_vars, ops, tempo, años):
                         data_out[v][op+t][m]=np.full(data_size,np.NINF,dtype=np.float)
                     elif op=='min':
                         data_out[v][op+t][m]=np.full(data_size,np.PINF,dtype=np.float)
+                    elif op=='acc':
+                        data_out[v][op+t][m]=np.zeros(data_size,dtype=np.float)
                     elif op=='avg':
                         data_out[v][op+t][m]=np.zeros(data_size,dtype=np.float)
                     elif op=='cnt':
@@ -105,36 +107,51 @@ def load_data(dayfile, data_vars ):
     with Dataset(dayfile,'r') as root:
         for var in data_vars:
             tread_i=time.time()
-            if var=='T2':
+            if var=='RAIN':
+                data['RAIN']=np.array(root['RAINC'][:])
+                data['RAIN']+=np.array(root['RAINNC'][:])
+                tproc_i=time.time()
+                tread+=tproc_i-tread_i
+                tproc+=time.time()-tproc_i
+
+            elif var=='QFX':
+                data['QFX']=np.array(root['QFX'][:])
+                tproc_i=time.time()
+                tread+=tproc_i-tread_i
+                #flux to accumulated
+                data['QFX']*=3600
+                tproc+=time.time()-tproc_i
+
+            elif var=='T2':
                 data['T2']=np.array(root['T2'][:])
                 tproc_i=time.time()
-                tread+=tread_i-tproc_i
+                tread+=tproc_i-tread_i
                 data['T2']-=273.15
-                tproc+=tproc_i-time.time()
+                tproc+=time.time()-tproc_i
 
-            if var=='RH':
+            elif var=='RH':
                 P=np.array(root['PSFC'][:])
                 Q=np.clip(np.array(root["Q2"][:]),a_min=0,a_max=None,)
                 T=np.array(root['T2'][:])
                 tproc_i=time.time()
-                tread+=tread_i-tproc_i
+                tread+=tproc_i-tread_i
                 ez=611.2
                 eps=0.622
                 Es=ez*np.exp(17.67*(T-273.15)/(T-29.65))
                 Qvs=eps*Es/(P-(1-eps)*Es)
                 data['RH']=100*Q/Qvs
                 np.clip(data['RH'],0,100,out=data['RH'])
-                tproc+=tproc_i-time.time()
+                tproc+=time.time()-tproc_i
             elif var=='WS':
                 U=np.array(root['U10'][:])
                 V=np.array(root['V10'][:])
                 tproc_i=time.time()
-                tread+=tread_i-tproc_i
+                tread+=tproc_i-tread_i
                 data['WS']=np.sqrt(np.square(V)+np.square(U))
-                tproc+=tproc_i-time.time()
+                tproc+=time.time()-tproc_i
             else:
                 data[var]=np.array(root[var][:])
-                tread+=tread_i-time.time()
+                tread+=time.time()-tread_i
     return (tread,tproc)
 
 itime=time.time()
@@ -143,11 +160,11 @@ itime=time.time()
 data_vars=(
         "T2",#Temperatura
         "RH",#Humedad Relativa
-        #"RAIN",#lluvia
+        "RAIN",#lluvia
         "WS",#viento
         "SWDOWN",#Radiación de onda corta
         "GLW",# Radiación de onda larga
-        "QFX",#Evaporación
+        "QFX",#Evaporación (moisture flux)
         #"PBLH",#Altura de capa límite
         )
 #tamaño de datos, leer de algún archivo?
@@ -156,6 +173,7 @@ data_size=(348,617)
 ops=(
         'max',
         'min',
+        'acc',
         'avg',
         'cnt',
         #'prc',
@@ -163,7 +181,7 @@ ops=(
         )
 #temporalidad de salidas
 tempo=(
-        '_per_h',
+        #'_per_h',
         '_per_d',
         '_per_m',
         #'_per_y',
